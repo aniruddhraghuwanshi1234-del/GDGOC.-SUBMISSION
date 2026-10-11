@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>gdgocaitr.app</title>
+</head>
+<body>
+   <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GDG on Campus AITR | Google Developer Group</title>
+  
+  <!-- Bootstrap 5.3 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       1. GLOBAL STYLES & BRAND COLOR VARIABLES (Google Developers Guidelines)
+       ========================================================================== */
+    :root {
+      --gdg-blue: #4285F4;
+      --gdg-red: #EA4335;
+      --gdg-yellow: #FBBC04;
+      --gdg-green: #34A853;
+      --gdg-dark: #1e1e1e;
+      --gdg-light-bg: #f8f9fa;
+      --font-main: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    body {
+      font-family: var(--font-main);
+      color: #202124;
+      background-color: #ffffff;
+      overflow-x: hidden; /* Prevent mobile horizontal scroll/breakages */
+    }
+
+    /* Paragraph Readability Fix */
+    p {
+      line-height: 1.65;
+      color: #5f6368;
+    }
+
+    /* Smooth Scrolling */
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 80px;
+    }
+
+    /* ==========================================================================
+       2. NAVIGATION & HEADER
+       ========================================================================== */
+    .navbar {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .navbar-brand img {
+      height: 32px;
+    }
+
+    .nav-link {
+      font-weight: 600;
+      color: #3c4043;
+      padding: 0.5rem 1rem !important;
+      transition: color 0.2s ease;
+    }
+
+    .nav-link:hover, .nav-link.active {
+      color: var(--gdg-blue);
+    }
+
+    /* Target Touch Size Compliance for Mobile */
+    .btn, .nav-link {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    /* ==========================================================================
+       3. HERO SECTION & STATS
+       ========================================================================== */
+    .hero-section {
+      padding: 100px 0 60px;
+      background: radial-gradient(circle at 90% 10%, rgba(66, 133, 244, 0.08), transparent 40%),
+                  radial-gradient(circle at 10% 90%, rgba(52, 168, 83, 0.08), transparent 40%);
+    }
+
+    .google-dots {
+      display: inline-flex;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .dot-blue { background-color: var(--gdg-blue); }
+    .dot-red { background-color: var(--gdg-red); }
+    .dot-yellow { background-color: var(--gdg-yellow); }
+    .dot-green { background-color: var(--gdg-green); }
+
+    .stat-card {
+      border: 1px solid #e0e0e0;
+      border-radius: 16px;
+      padding: 20px;
+      background: #ffffff;
+      text-align: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.06);
+    }
+
+    /* ==========================================================================
+       4. CARDS & UNIFORM LAYOUT FIXES
+       ========================================================================== */
+    .card {
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      transition: all 0.3s ease;
+      height: 100%; /* Fixes uneven card height issues */
+    }
+
+    .card:hover {
+      box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+      border-color: rgba(66, 133, 244, 0.4);
+    }
+
+    .badge-track {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 6px 12px;
+      border-radius: 50px;
+    }
+
+    .track-web { background: rgba(66, 133, 244, 0.1); color: var(--gdg-blue); }
+    .track-ai { background: rgba(234, 67, 53, 0.1); color: var(--gdg-red); }
+    .track-cloud { background: rgba(251, 188, 4, 0.15); color: #b07d00; }
+    .track-android { background: rgba(52, 168, 83, 0.1); color: var(--gdg-green); }
+
+    /* ==========================================================================
+       5. LEADERBOARD TABLE STYLES
+       ========================================================================== */
+    .table-leaderboard tbody tr {
+      vertical-align: middle;
+    }
+    
+    .rank-badge {
+      width: 32px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      font-weight: 700;
+    }
+    
+    .rank-1 { background: #fff3cd; color: #856404; }
+    .rank-2 { background: #e2e3e5; color: #383d41; }
+    .rank-3 { background: #f8d7da; color: #721c24; }
+
+    /* ==========================================================================
+       6. FOOTER STYLES
+       ========================================================================== */
+    footer {
+      background-color: var(--gdg-dark);
+      color: #9aa0a6;
+    }
+
+    footer a {
+      color: #e8eaed;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      color: var(--gdg-blue);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==========================================================================
+       NAVIGATION BAR
+       ========================================================================== -->
+  <nav class="navbar navbar-expand-lg fixed-top">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+        <div class="google-dots mb-0">
+          <span class="dot dot-blue"></span>
+          <span class="dot dot-red"></span>
+          <span class="dot dot-yellow"></span>
+          <span class="dot dot-green"></span>
+        </div>
+        <span class="fw-bold fs-5 text-dark">GDGoC AITR</span>
+      </a>
+      
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarContent">
+        <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center gap-1">
+          <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="#events">Events</a></li>
+          <li class="nav-item"><a class="nav-link" href="#projects">Showcase</a></li>
+          <li class="nav-item"><a class="nav-link" href="#roadmaps">Roadmaps</a></li>
+          <li class="nav-item"><a class="nav-link" href="#leaderboard">Leaderboard</a></li>
+          <li class="nav-item ms-lg-2">
+            <a class="btn btn-primary rounded-pill px-4 fw-semibold" href="https://gdg.community.dev" target="_blank" rel="noopener">
+              Join Chapter
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ==========================================================================
+       HERO SECTION
+       ========================================================================== -->
+  <section class="hero-section">
+    <div class="container">
+      <div class="row align-items-center gy-5">
+        <div class="col-lg-7 text-center text-lg-start">
+          <div class="google-dots">
+            <span class="dot dot-blue"></span>
+            <span class="dot dot-red"></span>
+            <span class="dot dot-yellow"></span>
+            <span class="dot dot-green"></span>
+          </div>
+          <h1 class="display-4 fw-extrabold text-dark mb-3">
+            Building Tomorrow's Innovators at <span class="text-primary">AITR</span>
+          </h1>
+          <p class="lead mb-4 text-start">
+            Google Developer Groups on Campus Acropolis Institute of Technology and Research is a university-based community group for students interested in Google developer technologies.
+          </p>
+          <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-lg-start">
+            <a href="#events" class="btn btn-primary btn-lg rounded-pill px-4">Explore Events</a>
+            <a href="#projects" class="btn btn-outline-dark btn-lg rounded-pill px-4">View Projects</a>
+          </div>
+        </div>
+
+        <!-- HERO STATS (Recommended Feature) -->
+        <div class="col-lg-5">
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="stat-card">
+                <h2 class="fw-bold text-primary mb-1">1,200+</h2>
+                <p class="small mb-0 text-muted">Active Community Members</p>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="stat-card">
+                <h2 class="fw-bold text-danger mb-1">25+</h2>
+                <p class="small mb-0 text-muted">Workshops & Jams</p>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="stat-card">
+                <h2 class="fw-bold text-warning mb-1">15+</h2>
+                <p class="small mb-0 text-muted">Projects Built</p>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="stat-card">
+                <h2 class="fw-bold text-success mb-1">100%</h2>
+                <p class="small mb-0 text-muted">Free & Open Source</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
+       UPCOMING & PAST EVENTS SECTION
+       ========================================================================== -->
+  <section id="events" class="py-5 bg-light">
+    <div class="container py-4">
+      <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+          <span class="text-primary fw-bold small text-uppercase">Learn & Engage</span>
+          <h2 class="fw-bold mb-0">Events & Workshops</h2>
+        </div>
+        <!-- Event Filter Tabs -->
+        <ul class="nav nav-pills" id="eventTabs" role="tablist">
+          <li class="nav-item">
+            <button class="nav-link active rounded-pill px-3" id="upcoming-tab" data-bs-toggle="pill" data-bs-target="#upcoming" type="button">Upcoming</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link rounded-pill px-3" id="past-tab" data-bs-toggle="pill" data-bs-target="#past" type="button">Archive</button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="tab-content" id="eventTabsContent">
+        <!-- Upcoming Events Tab -->
+        <div class="tab-pane fade show active" id="upcoming" role="tabpanel">
+          <div class="row g-4">
+            <div class="col-md-6 col-lg-4">
+              <div class="card h-full">
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                  <div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                      <span class="badge-track track-ai">AI / GenAI</span>
+                      <small class="text-muted"><i class="bi bi-calendar3 me-1"></i>Oct 28, 2026</small>
+                    </div>
+                    <h5 class="card-title fw-bold">Google Cloud Study Jam '26</h5>
+                    <p class="card-text small text-muted">Get hands-on experience with Vertex AI, Generative AI Studio, and earn official Google Cloud skill badges.</p>
+                  </div>
+                  <div class="pt-3 border-top mt-3 d-flex align-items-center justify-content-between">
+                    <span class="small text-muted"><i class="bi bi-geo-alt me-1"></i>Auditorium 2</span>
+                    <a href="#" class="btn btn-sm btn-outline-primary rounded-pill px-3">RSVP Now</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+              <div class="card h-full">
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                  <div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                      <span class="badge-track track-web">Web Dev</span>
+                      <small class="text-muted"><i class="bi bi-calendar3 me-1"></i>Nov 05, 2026</small>
+                    </div>
+                    <h5 class="card-title fw-bold">Modern Web Architecture</h5>
+                    <p class="card-text small text-muted">Deep dive into Next.js 15, SSR, performance optimizations, and deploying scalable web apps on Vercel.</p>
+                  </div>
+                  <div class="pt-3 border-top mt-3 d-flex align-items-center justify-content-between">
+                    <span class="small text-muted"><i class="bi bi-laptop me-1"></i>Online (Meet)</span>
+                    <a href="#" class="btn btn-sm btn-outline-primary rounded-pill px-3">RSVP Now</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+              <div class="card h-full">
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                  <div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                      <span class="badge-track track-android">Android</span>
+                      <small class="text-muted"><i class="bi bi-calendar3 me-1"></i>Nov 18, 2026</small>
+                    </div>
+                    <h5 class="card-title fw-bold">Compose Camp AITR</h5>
+                    <p class="card-text small text-muted">Build modern native UI on Android using Jetpack Compose from scratch with practical live-coding examples.</p>
+                  </div>
+                  <div class="pt-3 border-top mt-3 d-flex align-items-center justify-content-between">
+                    <span class="small text-muted"><i class="bi bi-geo-alt me-1"></i>Lab 304</span>
+                    <a href="#" class="btn btn-sm btn-outline-primary rounded-pill px-3">RSVP Now</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Past Events Tab (Archive Feature) -->
+        <div class="tab-pane fade" id="past" role="tabpanel">
+          <div class="row g-4">
+            <div class="col-md-6 col-lg-4">
+              <div class="card h-full bg-light">
+                <div class="card-body p-4">
+                  <span class="badge-track track-cloud mb-2 d-inline-block">Cloud</span>
+                  <h5 class="fw-bold">Google Solution Challenge Info Session</h5>
+                  <p class="small text-muted">Learn how to build solutions addressing the UN 17 Sustainable Development Goals.</p>
+                  <div class="d-flex gap-2">
+                    <a href="#" class="btn btn-sm btn-light border"><i class="bi bi-youtube text-danger me-1"></i> Recording</a>
+                    <a href="#" class="btn btn-sm btn-light border"><i class="bi bi-file-earmark-slides me-1"></i> Slides</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
+       NEW FEATURE: STUDENT PROJECT SHOWCASE
+       ========================================================================== -->
+  <section id="projects" class="py-5">
+    <div class="container py-4">
+      <div class="text-center max-w-2xl mx-auto mb-5">
+        <span class="text-success fw-bold small text-uppercase">Innovation Hub</span>
+        <h2 class="fw-bold">Student Project Showcase</h2>
+        <p class="text-muted">Explore open-source solutions crafted by GDGoC AITR community members.</p>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-md-6 col-lg-4">
+          <div class="card">
+            <div class="card-body p-4">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="fw-bold mb-0">Campus Navigator AI</h5>
+                <a href="#" class="text-dark"><i class="bi bi-github fs-5"></i></a>
+              </div>
+              <p class="small text-muted mb-3">Smart route finder and event locator for AITR campus using Flutter and Firebase.</p>
+              <div class="d-flex flex-wrap gap-1 mb-3">
+                <span class="badge bg-light text-dark border">Flutter</span>
+                <span class="badge bg-light text-dark border">Firebase</span>
+                <span class="badge bg-light text-dark border">GCP</span>
+              </div>
+              <a href="#" class="small fw-bold text-primary text-decoration-none">View Live Demo <i class="bi bi-arrow-right"></i></a>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+          <div class="card">
+            <div class="card-body p-4">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="fw-bold mb-0">AgriSense IoT</h5>
+                <a href="#" class="text-dark"><i class="bi bi-github fs-5"></i></a>
+              </div>
+              <p class="small text-muted mb-3">AI-powered crop disease detection platform built for local farmers during Hackathon '25.</p>
+              <div class="d-flex flex-wrap gap-1 mb-3">
+                <span class="badge bg-light text-dark border">TensorFlow</span>
+                <span class="badge bg-light text-dark border">Python</span>
+                <span class="badge bg-light text-dark border">FastAPI</span>
+              </div>
+              <a href="#" class="small fw-bold text-primary text-decoration-none">View Live Demo <i class="bi bi-arrow-right"></i></a>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+          <div class="card border-dashed d-flex align-items-center justify-content-center text-center p-4 bg-light">
+            <div>
+              <i class="bi bi-plus-circle-fill fs-2 text-primary mb-2"></i>
+              <h6 class="fw-bold">Built Something Cool?</h6>
+              <p class="small text-muted mb-3">Submit your project to get featured on the official chapter portal.</p>
+              <a href="#" class="btn btn-sm btn-primary rounded-pill px-3">Submit Project</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
+       NEW FEATURE: INTERACTIVE TECH ROADMAPS
+       ========================================================================== -->
+  <section id="roadmaps" class="py-5 bg-light">
+    <div class="container py-4">
+      <div class="text-center mb-5">
+        <span class="text-warning fw-bold small text-uppercase">Curated Learning</span>
+        <h2 class="fw-bold">Technology Roadmaps</h2>
+        <p class="text-muted">Structured domain paths recommended by GDGoC Leads for beginners.</p>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-md-3">
+          <div class="card text-center p-4">
+            <i class="bi bi-cloud-arrow-up text-warning fs-1 mb-2"></i>
+            <h6 class="fw-bold">Google Cloud</h6>
+            <p class="small text-muted">IAM, Compute Engine, Kubernetes, Vertex AI</p>
+            <a href="#" class="btn btn-sm btn-outline-warning rounded-pill mt-auto">Start Path</a>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card text-center p-4">
+            <i class="bi bi-phone text-success fs-1 mb-2"></i>
+            <h6 class="fw-bold">Android / Flutter</h6>
+            <p class="small text-muted">Kotlin, Jetpack Compose, Dart, Cross-Platform</p>
+            <a href="#" class="btn btn-sm btn-outline-success rounded-pill mt-auto">Start Path</a>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card text-center p-4">
+            <i class="bi bi-cpu text-danger fs-1 mb-2"></i>
+            <h6 class="fw-bold">AI / Machine Learning</h6>
+            <p class="small text-muted">Python, TensorFlow, Scikit-Learn, Gemini API</p>
+            <a href="#" class="btn btn-sm btn-outline-danger rounded-pill mt-auto">Start Path</a>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card text-center p-4">
+            <i class="bi bi-code-slash text-primary fs-1 mb-2"></i>
+            <h6 class="fw-bold">Web Development</h6>
+            <p class="small text-muted">HTML/CSS, JS, React, Node.js, Deployment</p>
+            <a href="#" class="btn btn-sm btn-outline-primary rounded-pill mt-auto">Start Path</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
+       NEW FEATURE: LEADERBOARD / HALL OF FAME
+       ========================================================================== -->
+  <section id="leaderboard" class="py-5">
+    <div class="container py-4">
+      <div class="row align-items-center gy-4">
+        <div class="col-lg-5">
+          <span class="text-danger fw-bold small text-uppercase">Recognition</span>
+          <h2 class="fw-bold mb-3">Community Hall of Fame</h2>
+          <p class="text-muted">
+            Top performers recognized for completing Cloud Study Jams, solving Solution Challenge prompts, and contributing to open-source chapter repositories.
+          </p>
+          <a href="#" class="btn btn-outline-dark rounded-pill px-4">View Full Leaderboard</a>
+        </div>
+
+        <div class="col-lg-7">
+          <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover table-leaderboard mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th class="ps-4">Rank</th>
+                      <th>Contributor</th>
+                      <th>Track</th>
+                      <th class="text-end pe-4">Badges Earned</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="ps-4"><span class="rank-badge rank-1">1</span></td>
+                      <td>
+                        <div class="fw-bold">Aarav Sharma</div>
+                        <div class="small text-muted">CS - 3rd Year</div>
+                      </td>
+                      <td><span class="badge-track track-cloud">Cloud Lead</span></td>
+                      <td class="text-end pe-4 fw-bold text-primary">18 Badges</td>
+                    </tr>
+                    <tr>
+                      <td class="ps-4"><span class="rank-badge rank-2">2</span></td>
+                      <td>
+                        <div class="fw-bold">Priya Patel</div>
+                        <div class="small text-muted">IT - 2nd Year</div>
+                      </td>
+                      <td><span class="badge-track track-ai">GenAI</span></td>
+                      <td class="text-end pe-4 fw-bold text-primary">15 Badges</td>
+                    </tr>
+                    <tr>
+                      <td class="ps-4"><span class="rank-badge rank-3">3</span></td>
+                      <td>
+                        <div class="fw-bold">Rohan Verma</div>
+                        <div class="small text-muted">CS - 4th Year</div>
+                      </td>
+                      <td><span class="badge-track track-android">Android</span></td>
+                      <td class="text-end pe-4 fw-bold text-primary">12 Badges</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
+       FOOTER
+       ========================================================================== -->
+  <footer class="py-5">
+    <div class="container">
+      <div class="row g-4 mb-4">
+        <div class="col-lg-4">
+          <div class="google-dots mb-2">
+            <span class="dot dot-blue"></span>
+            <span class="dot dot-red"></span>
+            <span class="dot dot-yellow"></span>
+            <span class="dot dot-green"></span>
+          </div>
+          <h5 class="text-white fw-bold">GDGoC AITR</h5>
+          <p class="small me-lg-4">
+            Acropolis Institute of Technology and Research, Indore, MP, India.
+          </p>
+        </div>
+        <div class="col-6 col-lg-2">
+          <h6 class="text-white fw-bold mb-3">Quick Links</h6>
+          <ul class="list-unstyled small d-flex flex-column gap-2">
+            <li><a href="#about">About Us</a></li>
+            <li><a href="#events">Events</a></li>
+            <li><a href="#projects">Showcase</a></li>
+            <li><a href="#leaderboard">Leaderboard</a></li>
+          </ul>
+        </div>
+        <div class="col-6 col-lg-2">
+          <h6 class="text-white fw-bold mb-3">Resources</h6>
+          <ul class="list-unstyled small d-flex flex-column gap-2">
+            <li><a href="https://developers.google.com" target="_blank" rel="noopener">Google Developers</a></li>
+            <li><a href="https://gdg.community.dev" target="_blank" rel="noopener">GDG Community</a></li>
+            <li><a href="#">Brand Guidelines</a></li>
+          </ul>
+        </div>
+        <div class="col-lg-4">
+          <h6 class="text-white fw-bold mb-3">Connect with Us</h6>
+          <div class="d-flex gap-3 fs-5 mb-3">
+            <a href="#" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+            <a href="#" aria-label="GitHub"><i class="bi bi-github"></i></a>
+            <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+            <a href="#" aria-label="Discord"><i class="bi bi-discord"></i></a>
+            <a href="#" aria-label="WhatsApp"><i class="bi bi-whatsapp"></i></a>
+          </div>
+          <p class="small">Have questions? Reach out at <a href="mailto:gdg@aitr.ac.in" class="text-primary">gdg@aitr.ac.in</a></p>
+        </div>
+      </div>
+
+      <div class="border-top border-secondary pt-4 text-center small">
+        <p class="mb-0">&copy; 2026 GDG on Campus AITR. Disclaimer: GDG on Campus AITR is an independent group; our activities and the opinions expressed here should in no way be linked to Google, the corporation.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==========================================================================
+       JAVASCRIPT & INTERACTIVITY
+       ========================================================================== -->
+  <!-- Bootstrap 5.3 Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Mobile Navigation Backdrop Scroll-Lock Fix
+      const navbarCollapse = document.getElementById('navbarContent');
+      
+      navbarCollapse.addEventListener('show.bs.collapse', () => {
+        document.body.style.overflow = 'hidden';
+      });
+
+      navbarCollapse.addEventListener('hidden.bs.collapse', () => {
+        document.body.style.overflow = '';
+      });
+
+      // Close mobile menu automatically when a nav item is clicked
+      const navLinks = document.querySelectorAll('.nav-link');
+      navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+          if (navbarCollapse.classList.contains('show')) {
+            const bsCollapse = bootstrap.Collapse.getInstance(navbarCollapse);
+            if (bsCollapse) bsCollapse.hide();
+          }
+        });
+      });
+
+      // 2. Active Navbar Highlight on Scroll
+      window.addEventListener('scroll', () => {
+        let current = '';
+        const sections = document.querySelectorAll('section');
+        
+        sections.forEach(section => {
+          const sectionTop = section.offsetTop;
+          if (pageYOffset >= (sectionTop - 120)) {
+            current = section.getAttribute('id');
+          }
+        });
+
+        navLinks.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('href') === `#${current}`) {
+            link.classList.add('active');
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>                                                                             and tell me what new section, features or design changesyou would want share clear , actionable suggestion to improve the portal
+</body>
+</html>

@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CertiQuick - Bulk Certificate Generator</title>
+
+  <!-- Bootstrap 5.3 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+  <!-- Google Fonts for Certificates -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cinzel:wght@400;700&family=Great+Vibes&family=Inter:wght@400;600;700&family=Montserrat:wght@400;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Poppins:wght@400;600;700&family=Roboto:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+  <!-- External JavaScript Libraries -->
+  <!-- PapaParse for CSV parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <!-- JSZip for Zip creation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <!-- FileSaver.js for downloads -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <!-- jsPDF for multi-page PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    :root {
+      --primary-color: #4f46e5;
+      --primary-hover: #4338ca;
+      --bg-body: #f8fafc;
+      --card-bg: #ffffff;
+      --border-color: #e2e8f0;
+    }
+
+    [data-bs-theme="dark"] {
+      --bg-body: #0f172a;
+      --card-bg: #1e293b;
+      --border-color: #334155;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-body);
+      color: var(--bs-body-color);
+      min-height: 100vh;
+    }
+
+    .navbar-brand-logo {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 800;
+    }
+
+    .drop-zone {
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      background: rgba(241, 245, 249, 0.5);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    [data-bs-theme="dark"] .drop-zone {
+      border-color: #475569;
+      background: rgba(30, 41, 59, 0.5);
+    }
+
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--primary-color);
+      background: rgba(99, 102, 241, 0.05);
+    }
+
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      max-width: 100%;
+      background: #0f172a;
+      border-radius: 12px;
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    }
+
+    #certCanvas {
+      max-width: 100%;
+      max-height: 70vh;
+      height: auto;
+      object-fit: contain;
+      cursor: crosshair;
+      border-radius: 4px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .nav-tabs .nav-link {
+      font-weight: 600;
+      color: var(--bs-body-color);
+      border-radius: 8px 8px 0 0;
+    }
+
+    .nav-tabs .nav-link.active {
+      color: var(--primary-color);
+      border-bottom-color: var(--primary-color);
+    }
+
+    .form-section-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #64748b;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary-custom {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+      color: white;
+    }
+
+    .btn-primary-custom:hover {
+      background-color: var(--primary-hover);
+      border-color: var(--primary-hover);
+      color: white;
+    }
+
+    .layer-card {
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.75rem;
+      margin-bottom: 0.75rem;
+      background: var(--card-bg);
+      transition: border-color 0.2s ease;
+    }
+
+    .layer-card.active {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+    }
+
+    /* Modal loading backdrop */
+    .progress-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(4px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg border-bottom sticky-top" style="background: var(--card-bg);">
+    <div class="container-fluid px-4">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+        <div class="navbar-brand-logo">
+          <i class="bi bi-patch-check-fill fs-5"></i>
+        </div>
+        <span class="fw-bold fs-5">CertiQuick</span>
+        <span class="badge bg-indigo-subtle text-indigo rounded-pill small border ms-1 px-2 py-1" style="font-size: 0.7rem; background:#e0e7ff; color:#3730a3;">Bulk Generator</span>
+      </a>
+
+      <div class="d-flex align-items-center gap-2 ms-auto">
+        <button class="btn btn-outline-secondary btn-sm rounded-pill d-flex align-items-center gap-1" id="themeToggleBtn">
+          <i class="bi bi-moon-stars" id="themeIcon"></i>
+          <span class="d-none d-sm-inline" id="themeText">Dark Mode</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid px-4 py-3">
+    <div class="row g-4">
+      
+      <!-- LEFT SIDEBAR: CONTROLS & INPUTS -->
+      <div class="col-lg-4 col-xl-4">
+        <div class="card border-0 shadow-sm rounded-3">
+          <div class="card-body p-3">
+            
+            <!-- STEP TABS -->
+            <ul class="nav nav-tabs nav-fill mb-3" id="configTabs" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tab-template" data-bs-toggle="tab" data-bs-target="#panel-template" type="button" role="tab">
+                  <i class="bi bi-image me-1"></i> 1. Template
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-data" data-bs-toggle="tab" data-bs-target="#panel-data" type="button" role="tab">
+                  <i class="bi bi-people me-1"></i> 2. Names
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-design" data-bs-toggle="tab" data-bs-target="#panel-design" type="button" role="tab">
+                  <i class="bi bi-sliders me-1"></i> 3. Design
+                </button>
+              </li>
+            </ul>
+
+            <div class="tab-content" id="configTabsContent">
+              
+              <!-- PANEL 1: TEMPLATE UPLOAD -->
+              <div class="tab-pane fade show active" id="panel-template" role="tabpanel">
+                <div class="form-section-title">
+                  <i class="bi bi-file-earmark-image"></i> Certificate Background Image
+                </div>
+                
+                <div class="drop-zone mb-3" id="templateDropZone">
+                  <i class="bi bi-cloud-arrow-up display-5 text-primary mb-2 d-block"></i>
+                  <span class="fw-semibold d-block text-body">Drag & Drop certificate image</span>
+                  <span class="small text-muted mb-2 d-block">Supports PNG, JPG, WebP (High Res recommended)</span>
+                  <input type="file" id="templateFileInput" accept="image/png, image/jpeg, image/webp" class="d-none">
+                  <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 mt-1" onclick="document.getElementById('templateFileInput').click()">
+                    Browse Local File
+                  </button>
+                </div>
+
+                <div class="d-grid mb-3">
+                  <button type="button" class="btn btn-light border btn-sm d-flex align-items-center justify-content-center gap-2" id="useSampleTemplateBtn">
+                    <i class="bi bi-magic text-warning"></i> Load Sample Demo Template
+                  </button>
+                </div>
+
+                <div class="card bg-body-tertiary border-0 p-2.5 rounded-3">
+                  <div class="small fw-semibold mb-1"><i class="bi bi-info-circle me-1 text-primary"></i> Image Details</div>
+                  <div class="small text-muted" id="templateInfoText">Demo sample active (1920 x 1080 px)</div>
+                </div>
+              </div>
+
+              <!-- PANEL 2: IMPORT NAMES / DATA -->
+              <div class="tab-pane fade" id="panel-data" role="tabpanel">
+                <div class="form-section-title">
+                  <i class="bi bi-file-earmark-spreadsheet"></i> Import Participant Data
+                </div>
+
+                <!-- CSV Upload or Manual Entry Toggle -->
+                <ul class="nav nav-pills nav-fill mb-3 bg-body-tertiary p-1 rounded-3" id="dataInputType">
+                  <li class="nav-item">
+                    <button class="nav-link active py-1 small" id="pills-csv-tab" data-bs-toggle="pill" data-bs-target="#pills-csv" type="button">Upload CSV</button>
+                  </li>
+                  <li class="nav-item">
+                    <button class="nav-link py-1 small" id="pills-manual-tab" data-bs-toggle="pill" data-bs-target="#pills-manual" type="button">Manual List</button>
+                  </li>
+                </ul>
+
+                <div class="tab-content" id="dataInputTypeContent">
+                  <!-- CSV Tab -->
+                  <div class="tab-pane fade show active" id="pills-csv">
+                    <div class="mb-3">
+                      <input class="form-control form-control-sm" type="file" id="csvFileInput" accept=".csv">
+                    </div>
+                    
+                    <!-- Dynamic Column Selectors (visible after CSV upload) -->
+                    <div id="csvColumnSelectContainer" class="d-none mb-3 border p-2 rounded-3 bg-body-tertiary">
+                      <label class="form-label small fw-bold mb-1">Select Name Column</label>
+                      <select class="form-select form-select-sm" id="csvNameColumnSelect"></select>
+                      
+                      <label class="form-label small fw-bold mb-1 mt-2">Select Optional Secondary Column (e.g. Role/Date)</label>
+                      <select class="form-select form-select-sm" id="csvSubColumnSelect">
+                        <option value="">-- None --</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Manual List Tab -->
+                  <div class="tab-pane fade" id="pills-manual">
+                    <div class="mb-2">
+                      <label class="form-label small text-muted mb-1">Paste names (One participant per line)</label>
+                      <textarea class="form-control form-control-sm" id="manualNamesInput" rows="5" placeholder="John Doe&#10;Jane Smith&#10;Alex Johnson&#10;Maria Garcia"></textarea>
+                    </div>
+                    <button class="btn btn-sm btn-secondary w-100 mb-3" id="applyManualNamesBtn">Apply Manual List</button>
+                  </div>
+                </div>
+
+                <!-- Participant Counter & Sample Preview -->
+                <div class="alert alert-primary py-2 px-3 d-flex align-items-center justify-content-between mb-3 rounded-3" role="alert">
+                  <div>
+                    <i class="bi bi-people-fill me-1"></i> Total Parsed:
+                  </div>
+                  <span class="fw-bold fs-6" id="totalParticipantsBadge">4</span>
+                </div>
+
+                <div class="form-section-title">
+                  <i class="bi bi-eye"></i> Selected Preview Target
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between border p-2 rounded-3 mb-2">
+                  <button class="btn btn-sm btn-outline-secondary" id="prevParticipantBtn"><i class="bi bi-chevron-left"></i></button>
+                  <div class="text-center">
+                    <div class="fw-bold small" id="previewParticipantName">John Doe</div>
+                    <div class="small text-muted" style="font-size:0.75rem;" id="previewParticipantIndex">Participant 1 of 4</div>
+                  </div>
+                  <button class="btn btn-sm btn-outline-secondary" id="nextParticipantBtn"><i class="bi bi-chevron-right"></i></button>
+                </div>
+
+              </div>
+
+              <!-- PANEL 3: DESIGN & TYPOGRAPHY -->
+              <div class="tab-pane fade" id="panel-design" role="tabpanel">
+                
+                <!-- Target Field Selector Switcher -->
+                <div class="form-section-title">
+                  <i class="bi bi-layers"></i> Select Text Layer
+                </div>
+
+                <div class="btn-group w-100 mb-3" role="group">
+                  <input type="radio" class="btn-check" name="activeLayerRadio" id="layerNameRadio" checked>
+                  <label class="btn btn-outline-primary btn-sm" for="layerNameRadio">Main Name</label>
+
+                  <input type="radio" class="btn-check" name="activeLayerRadio" id="layerSubRadio">
+                  <label class="btn btn-outline-primary btn-sm" for="layerSubRadio">Secondary Field</label>
+
+                  <input type="radio" class="btn-check" name="activeLayerRadio" id="layerDateRadio">
+                  <label class="btn btn-outline-primary btn-sm" for="layerDateRadio">Date / Extra</label>
+                </div>
+
+                <!-- Font controls for active layer -->
+                <div class="border p-2.5 rounded-3 mb-3 bg-body-tertiary">
+                  
+                  <div class="form-check form-switch mb-2" id="layerVisibilitySwitchContainer">
+                    <input class="form-check-input" type="checkbox" id="layerVisibilityToggle" checked>
+                    <label class="form-check-input-label small fw-bold" for="layerVisibilityToggle">Enable Layer</label>
+                  </div>
+
+                  <!-- Text Input Content Override for non-CSV layer or custom text -->
+                  <div class="mb-2" id="staticTextContentContainer">
+                    <label class="form-label small fw-semibold mb-1">Custom Text / Format</label>
+                    <input type="text" class="form-control form-control-sm" id="layerCustomTextInput" placeholder="{value} or custom text">
+                    <div class="form-text" style="font-size:0.7rem;">Use <code>{value}</code> to insert dynamic CSV data.</div>
+                  </div>
+
+                  <div class="row g-2 mb-2">
+                    <div class="col-12">
+                      <label class="form-label small fw-semibold mb-1">Font Family</label>
+                      <select class="form-select form-select-sm" id="fontFamilySelect">
+                        <option value="Great Vibes" style="font-family: 'Great Vibes'; font-size:1.2rem;">Great Vibes (Calligraphy)</option>
+                        <option value="Alex Brush" style="font-family: 'Alex Brush'; font-size:1.2rem;">Alex Brush (Cursive)</option>
+                        <option value="Cinzel" style="font-family: 'Cinzel';">Cinzel (Serif Classic)</option>
+                        <option value="Playfair Display" style="font-family: 'Playfair Display';">Playfair Display (Serif)</option>
+                        <option value="Montserrat" selected style="font-family: 'Montserrat';">Montserrat (Sans Bold)</option>
+                        <option value="Poppins" style="font-family: 'Poppins';">Poppins (Modern Sans)</option>
+                        <option value="Roboto" style="font-family: 'Roboto';">Roboto (Clean)</option>
+                        <option value="Inter" style="font-family: 'Inter';">Inter (Standard)</option>
+                      </select>
+                    </div>
+
+                    <div class="col-6">
+                      <label class="form-label small fw-semibold mb-1">Font Size (px)</label>
+                      <input type="number" class="form-control form-control-sm" id="fontSizeInput" value="64" min="10" max="300">
+                    </div>
+
+                    <div class="col-6">
+                      <label class="form-label small fw-semibold mb-1">Text Color</label>
+                      <input type="color" class="form-control form-control-color form-control-sm w-100" id="textColorInput" value="#1e293b">
+                    </div>
+                  </div>
+
+                  <div class="row g-2 mb-2">
+                    <div class="col-6">
+                      <label class="form-label small fw-semibold mb-1">Style & Weight</label>
+                      <div class="btn-group w-100" role="group">
+                        <input type="checkbox" class="btn-check" id="btnBoldToggle" autocomplete="off">
+                        <label class="btn btn-sm btn-outline-secondary" for="btnBoldToggle"><i class="bi bi-type-bold"></i></label>
+                        <input type="checkbox" class="btn-check" id="btnItalicToggle" autocomplete="off">
+                        <label class="btn btn-sm btn-outline-secondary" for="btnItalicToggle"><i class="bi bi-type-italic"></i></label>
+                      </div>
+                    </div>
+
+                    <div class="col-6">
+                      <label class="form-label small fw-semibold mb-1">Alignment</label>
+                      <div class="btn-group w-100" role="group">
+                        <input type="radio" class="btn-check" name="textAlignRadio" id="alignLeft" value="left">
+                        <label class="btn btn-sm btn-outline-secondary" for="alignLeft"><i class="bi bi-text-left"></i></label>
+
+                        <input type="radio" class="btn-check" name="textAlignRadio" id="alignCenter" value="center" checked>
+                        <label class="btn btn-sm btn-outline-secondary" for="alignCenter"><i class="bi bi-text-center"></i></label>
+
+                        <input type="radio" class="btn-check" name="textAlignRadio" id="alignRight" value="right">
+                        <label class="btn btn-sm btn-outline-secondary" for="alignRight"><i class="bi bi-text-right"></i></label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="mb-2">
+                    <label class="form-label small fw-semibold mb-1">Text Case Transform</label>
+                    <select class="form-select form-select-sm" id="textTransformSelect">
+                      <option value="none">As Entered / Original</option>
+                      <option value="uppercase">UPPERCASE</option>
+                      <option value="titlecase" selected>Title Case (Capitalized)</option>
+                    </select>
+                  </div>
+
+                  <!-- Position & Offset Controls -->
+                  <div class="form-section-title mt-3">
+                    <i class="bi bi-arrows-move"></i> Position & Layout Controls
+                  </div>
+
+                  <div class="mb-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <label class="form-label small fw-semibold mb-0">X Position (%)</label>
+                      <span class="small text-muted" id="posXVal">50%</span>
+                    </div>
+                    <input type="range" class="form-range" id="posXSlider" min="0" max="100" value="50" step="0.5">
+                  </div>
+
+                  <div class="mb-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <label class="form-label small fw-semibold mb-0">Y Position (%)</label>
+                      <span class="small text-muted" id="posYVal">50%</span>
+                    </div>
+                    <input type="range" class="form-range" id="posYSlider" min="0" max="100" value="50" step="0.5">
+                  </div>
+
+                  <div class="mb-1">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <label class="form-label small fw-semibold mb-0">Rotation (Degrees)</label>
+                      <span class="small text-muted" id="rotationVal">0°</span>
+                    </div>
+                    <input type="range" class="form-range" id="rotationSlider" min="-180" max="180" value="0" step="1">
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT MAIN STAGE: LIVE PREVIEW CANVAS -->
+      <div class="col-lg-8 col-xl-8">
+        <div class="card border-0 shadow-sm rounded-3 h-100">
+          <div class="card-header bg-transparent border-0 d-flex flex-wrap align-items-center justify-content-between gap-2 p-3">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-aspect-ratio fs-5 text-primary"></i>
+              <span class="fw-bold">Interactive Certificate Stage</span>
+              <span class="badge bg-secondary-subtle text-secondary small d-none d-md-inline-block">Click/Drag on canvas to position text layer</span>
+            </div>
+
+            <!-- Single preview download -->
+            <button class="btn btn-sm btn-outline-primary rounded-pill d-flex align-items-center gap-1" id="downloadSingleBtn">
+              <i class="bi bi-download"></i> Download Single (PNG)
+            </button>
+          </div>
+
+          <div class="card-body p-3 d-flex flex-column align-items-center justify-content-center bg-body-tertiary rounded-bottom-3">
+            
+            <!-- Canvas Wrapper -->
+            <div class="canvas-container">
+              <canvas id="certCanvas" width="1920" height="1080"></canvas>
+            </div>
+
+            <!-- Action Export Bar -->
+            <div class="w-100 mt-3 p-3 bg-body card border-0 shadow-sm rounded-3">
+              <div class="row g-2 align-items-center">
+                <div class="col-md-6">
+                  <div class="fw-bold fs-6"><i class="bi bi-box-seam me-1 text-primary"></i> Bulk Generation Actions</div>
+                  <div class="small text-muted">Generate finish certificates for all parsed participants instantly.</div>
+                </div>
+                <div class="col-md-6 d-flex flex-wrap gap-2 justify-content-md-end">
+                  <button class="btn btn-success btn-primary-custom rounded-pill px-3 d-flex align-items-center gap-2" id="exportZipBtn">
+                    <i class="bi bi-file-zip-fill"></i> Download Zip (PNGs)
+                  </button>
+                  <button class="btn btn-danger rounded-pill px-3 d-flex align-items-center gap-2" id="exportPdfBtn">
+                    <i class="bi bi-file-earmark-pdf-fill"></i> Combined PDF
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PROGRESS OVERLAY MODAL -->
+  <div class="progress-overlay d-none" id="progressOverlay">
+    <div class="card border-0 shadow-lg p-4 rounded-4 text-center" style="max-width: 420px; width: 90%;">
+      <div class="spinner-border text-primary mx-auto mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
+      <h5 class="fw-bold mb-1" id="progressTitle">Generating Certificates...</h5>
+      <p class="small text-muted mb-3" id="progressSubtitle">Rendering high-resolution images</p>
+      
+      <div class="progress mb-2" style="height: 12px;">
+        <div class="progress-bar progress-bar-striped progress-bar-animated bg-indigo" id="progressBar" role="progressbar" style="width: 0%;"></div>
+      </div>
+      <div class="small fw-semibold text-primary" id="progressText">0 of 0</div>
+    </div>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       APP STATE MANAGEMENT
+       ========================================================================== */
+    const appState = {
+      // Template Image
+      templateImg: new Image(),
+      isTemplateLoaded: false,
+      templateWidth: 1920,
+      templateHeight: 1080,
+
+      // Participants Data List
+      participants: [
+        { name: "Aarav Sharma", sub: "Cloud Architecture Workshop", date: "2026-10-12" },
+        { name: "Priya Patel", sub: "AI & Machine Learning Jam", date: "2026-10-12" },
+        { name: "Rohan Verma", sub: "Web Development Bootcamp", date: "2026-10-12" },
+        { name: "Ananya Gupta", sub: "UI/UX Design Masterclass", date: "2026-10-12" }
+      ],
+      currentParticipantIndex: 0,
+
+      // Layers State
+      activeLayerKey: 'name', // 'name' | 'sub' | 'date'
+      layers: {
+        name: {
+          enabled: true,
+          customText: "{value}",
+          fontFamily: "Montserrat",
+          fontSize: 72,
+          color: "#1e293b",
+          bold: true,
+          italic: false,
+          align: "center",
+          transform: "titlecase",
+          posX: 50, // Percentage
+          posY: 52, // Percentage
+          rotation: 0
+        },
+        sub: {
+          enabled: true,
+          customText: "For successfully completing {value}",
+          fontFamily: "Poppins",
+          fontSize: 32,
+          color: "#475569",
+          bold: false,
+          italic: true,
+          align: "center",
+          transform: "none",
+          posX: 50,
+          posY: 64,
+          rotation: 0
+        },
+        date: {
+          enabled: true,
+          customText: "Issued on: {value}",
+          fontFamily: "Inter",
+          fontSize: 24,
+          color: "#64748b",
+          bold: false,
+          italic: false,
+          align: "center",
+          transform: "none",
+          posX: 50,
+          posY: 78,
+          rotation: 0
+        }
+      },
+
+      // Interaction state
+      isDragging: false
+    };
+
+    /* ==========================================================================
+       DOM ELEMENTS
+       ========================================================================== */
+    const canvas = document.getElementById('certCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Controls DOM
+    const templateFileInput = document.getElementById('templateFileInput');
+    const templateDropZone = document.getElementById('templateDropZone');
+    const useSampleTemplateBtn = document.getElementById('useSampleTemplateBtn');
+    const templateInfoText = document.getElementById('templateInfoText');
+
+    const csvFileInput = document.getElementById('csvFileInput');
+    const csvColumnSelectContainer = document.getElementById('csvColumnSelectContainer');
+    const csvNameColumnSelect = document.getElementById('csvNameColumnSelect');
+    const csvSubColumnSelect = document.getElementById('csvSubColumnSelect');
+    const manualNamesInput = document.getElementById('manualNamesInput');
+    const applyManualNamesBtn = document.getElementById('applyManualNamesBtn');
+    const totalParticipantsBadge = document.getElementById('totalParticipantsBadge');
+
+    const previewParticipantName = document.getElementById('previewParticipantName');
+    const previewParticipantIndex = document.getElementById('previewParticipantIndex');
+    const prevParticipantBtn = document.getElementById('prevParticipantBtn');
+    const nextParticipantBtn = document.getElementById('nextParticipantBtn');
+
+    // Design Controls DOM
+    const layerVisibilityToggle = document.getElementById('layerVisibilityToggle');
+    const layerCustomTextInput = document.getElementById('layerCustomTextInput');
+    const fontFamilySelect = document.getElementById('fontFamilySelect');
+    const fontSizeInput = document.getElementById('fontSizeInput');
+    const textColorInput = document.getElementById('textColorInput');
+    const btnBoldToggle = document.getElementById('btnBoldToggle');
+    const btnItalicToggle = document.getElementById('btnItalicToggle');
+    const textTransformSelect = document.getElementById('textTransformSelect');
+    const posXSlider = document.getElementById('posXSlider');
+    const posYSlider = document.getElementById('posYSlider');
+    const rotationSlider = document.getElementById('rotationSlider');
+    const posXVal = document.getElementById('posXVal');
+    const posYVal = document.getElementById('posYVal');
+    rotationVal = document.getElementById('rotationVal');
+
+    // Export Buttons
+    const downloadSingleBtn = document.getElementById('downloadSingleBtn');
+    const exportZipBtn = document.getElementById('exportZipBtn');
+    const exportPdfBtn = document.getElementById('exportPdfBtn');
+
+    // Theme Toggle
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeIcon = document.getElementById('themeIcon');
+    const themeText = document.getElementById('themeText');
+
+    /* ==========================================================================
+       INITIALIZATION
+       ========================================================================== */
+    window.addEventListener('DOMContentLoaded', () => {
+      // Load Default Sample Canvas Template
+      loadSampleCanvasTemplate();
+
+      // Bind UI Event Listeners
+      bindEventListeners();
+
+      // Sync Controls with Default State
+      updateUIFromState();
+    });
+
+    /* ==========================================================================
+       DEFAULT DEMO SAMPLE CANVAS GENERATION
+       ========================================================================== */
+    function loadSampleCanvasTemplate() {
+      // Draw elegant default certificate template onto memory image
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = 1920;
+      tempCanvas.height = 1080;
+      const tCtx = tempCanvas.getContext('2d');
+
+      // Background Gradient
+      const grad = tCtx.createLinearGradient(0, 0, 1920, 1080);
+      grad.addColorStop(0, '#f8fafc');
+      grad.addColorStop(1, '#f1f5f9');
+      tCtx.fillStyle = grad;
+      tCtx.fillRect(0, 0, 1920, 1080);
+
+      // Gold & Navy Border Frame
+      tCtx.strokeStyle = '#4f46e5';
+      tCtx.lineWidth = 24;
+      tCtx.strokeRect(40, 40, 1920 - 80, 1080 - 80);
+
+      tCtx.strokeStyle = '#cbd5e1';
+      tCtx.lineWidth = 4;
+      tCtx.strokeRect(64, 64, 1920 - 128, 1080 - 128);
+
+      // Decorative Corner Accents
+      tCtx.fillStyle = '#4f46e5';
+      tCtx.fillRect(40, 40, 160, 160);
+      tCtx.fillRect(1920 - 200, 40, 160, 160);
+      tCtx.fillRect(40, 1080 - 200, 160, 160);
+      tCtx.fillRect(1920 - 200, 1080 - 200, 160, 160);
+
+      tCtx.fillStyle = '#ffffff';
+      tCtx.fillRect(52, 52, 136, 136);
+      tCtx.fillRect(1920 - 188, 52, 136, 136);
+      tCtx.fillRect(52, 1080 - 188, 136, 136);
+      tCtx.fillRect(1920 - 188, 1080 - 188, 136, 136);
+
+      // Static Title & Header
+      tCtx.textAlign = 'center';
+      tCtx.fillStyle = '#4f46e5';
+      tCtx.font = 'bold 36px Cinzel, serif';
+      tCtx.fillText('CERTIFICATE OF ACHIEVEMENT', 1920 / 2, 220);
+
+      tCtx.fillStyle = '#64748b';
+      tCtx.font = '24px Montserrat, sans-serif';
+      tCtx.fillText('THIS IS PROUDLY PRESENTED TO', 1920 / 2, 330);
+
+      // Convert generated canvas to image src
+      appState.templateImg.onload = () => {
+        appState.isTemplateLoaded = true;
+        appState.templateWidth = appState.templateImg.width;
+        appState.templateHeight = appState.templateImg.height;
+        canvas.width = appState.templateWidth;
+        canvas.height = appState.templateHeight;
+        templateInfoText.textContent = `Demo Sample Template (${appState.templateWidth} x ${appState.templateHeight} px)`;
+        renderCanvas();
+      };
+      appState.templateImg.src = tempCanvas.toDataURL('image/png');
+    }
+
+    /* ==========================================================================
+       CANVAS RENDERING LOGIC
+       ========================================================================== */
+    function renderCanvas() {
+      if (!appState.isTemplateLoaded) return;
+
+      // 1. Draw Background Image
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(appState.templateImg, 0, 0, canvas.width, canvas.height);
+
+      // Current Participant
+      const participant = appState.participants[appState.currentParticipantIndex] || { name: "Participant Name", sub: "Course/Role", date: "Date" };
+
+      // 2. Render Layers in Order
+      Object.keys(appState.layers).forEach(layerKey => {
+        const layer = appState.layers[layerKey];
+        if (!layer.enabled) return;
+
+        let rawValue = "";
+        if (layerKey === 'name') rawValue = participant.name || "";
+        else if (layerKey === 'sub') rawValue = participant.sub || "";
+        else if (layerKey === 'date') rawValue = participant.date || "October 2026";
+
+        // Process Custom Template formatting
+        let textToRender = layer.customText ? layer.customText.replace('{value}', rawValue) : rawValue;
+
+        // Apply Transform Case
+        if (layer.transform === 'uppercase') textToRender = textToRender.toUpperCase();
+        else if (layer.transform === 'titlecase') textToRender = toTitleCase(textToRender);
+
+        // Coordinates based on percentage
+        const xPos = (layer.posX / 100) * canvas.width;
+        const yPos = (layer.posY / 100) * canvas.height;
+
+        ctx.save();
+        ctx.translate(xPos, yPos);
+        ctx.rotate((layer.rotation * Math.PI) / 180);
+
+        // Font Style string building
+        const fontStyle = layer.italic ? 'italic' : 'normal';
+        const fontWeight = layer.bold ? 'bold' : 'normal';
+        ctx.font = `${fontStyle} ${fontWeight} ${layer.fontSize}px "${layer.fontFamily}", sans-serif`;
+        ctx.fillStyle = layer.color;
+        ctx.textAlign = layer.align;
+        ctx.textBaseline = 'middle';
+
+        // Render Text
+        ctx.fillText(textToRender, 0, 0);
+
+        // Draw Active Selection Crosshair Marker
+        if (layerKey === appState.activeLayerKey) {
+          ctx.strokeStyle = '#4f46e5';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([6, 6]);
+          
+          const metrics = ctx.measureText(textToRender);
+          const textWidth = metrics.width || 200;
+          const textHeight = layer.fontSize;
+
+          let startX = -textWidth / 2;
+          if (layer.align === 'left') startX = 0;
+          if (layer.align === 'right') startX = -textWidth;
+
+          ctx.strokeRect(startX - 10, -textHeight / 2 - 5, textWidth + 20, textHeight + 10);
+        }
+
+        ctx.restore();
+      });
+    }
+
+    /* Helper: Title Case Converter */
+    function toTitleCase(str) {
+      return str.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+    }
+
+    /* ==========================================================================
+       UI CONTROLS & EVENT BINDINGS
+       ========================================================================== */
+    function bindEventListeners() {
+      
+      // Template File Upload
+      templateFileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+          handleImageFile(e.target.files[0]);
+        }
+      });
+
+      // Drag and Drop Zone
+      templateDropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        templateDropZone.classList.add('dragover');
+      });
+
+      templateDropZone.addEventListener('dragleave', () => {
+        templateDropZone.classList.remove('dragover');
+      });
+
+      templateDropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        templateDropZone.classList.remove('dragover');
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+          handleImageFile(e.dataTransfer.files[0]);
+        }
+      });
+
+      useSampleTemplateBtn.addEventListener('click', loadSampleCanvasTemplate);
+
+      // CSV Upload
+      csvFileInput.addEventListener('change', handleCsvUpload);
+
+      // Manual Names Entry
+      applyManualNamesBtn.addEventListener('click', () => {
+        const lines = manualNamesInput.value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        if (lines.length > 0) {
+          appState.participants = lines.map(name => ({ name: name, sub: "Participant", date: new Date().toISOString().split('T')[0] }));
+          appState.currentParticipantIndex = 0;
+          updateParticipantUI();
+          renderCanvas();
+        }
+      });
+
+      // Navigation Buttons
+      prevParticipantBtn.addEventListener('click', () => {
+        if (appState.currentParticipantIndex > 0) {
+          appState.currentParticipantIndex--;
+          updateParticipantUI();
+          renderCanvas();
+        }
+      });
+
+      nextParticipantBtn.addEventListener('click', () => {
+        if (appState.currentParticipantIndex < appState.participants.length - 1) {
+          appState.currentParticipantIndex++;
+          updateParticipantUI();
+          renderCanvas();
+        }
+      });
+
+      // Layer Selection Radio Buttons
+      document.querySelectorAll('input[name="activeLayerRadio"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          if (e.target.id === 'layerNameRadio') appState.activeLayerKey = 'name';
+          else if (e.target.id === 'layerSubRadio') appState.activeLayerKey = 'sub';
+          else if (e.target.id === 'layerDateRadio') appState.activeLayerKey = 'date';
+
+          updateUIFromState();
+          renderCanvas();
+        });
+      });
+
+      // Layer Property Inputs Binding
+      layerVisibilityToggle.addEventListener('change', (e) => {
+        appState.layers[appState.activeLayerKey].enabled = e.target.checked;
+        renderCanvas();
+      });
+
+      layerCustomTextInput.addEventListener('input', (e) => {
+        appState.layers[appState.activeLayerKey].customText = e.target.value;
+        renderCanvas();
+      });
+
+      fontFamilySelect.addEventListener('change', (e) => {
+        appState.layers[appState.activeLayerKey].fontFamily = e.target.value;
+        renderCanvas();
+      });
+
+      fontSizeInput.addEventListener('input', (e) => {
+        appState.layers[appState.activeLayerKey].fontSize = parseInt(e.target.value) || 24;
+        renderCanvas();
+      });
+
+      textColorInput.addEventListener('input', (e) => {
+        appState.layers[appState.activeLayerKey].color = e.target.value;
+        renderCanvas();
+      });
+
+      btnBoldToggle.addEventListener('change', (e) => {
+        appState.layers[appState.activeLayerKey].bold = e.target.checked;
+        renderCanvas();
+      });
+
+      btnItalicToggle.addEventListener('change', (e) => {
+        appState.layers[appState.activeLayerKey].italic = e.target.checked;
+        renderCanvas();
+      });
+
+      document.querySelectorAll('input[name="textAlignRadio"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          appState.layers[appState.activeLayerKey].align = e.target.value;
+          renderCanvas();
+        });
+      });
+
+      textTransformSelect.addEventListener('change', (e) => {
+        appState.layers[appState.activeLayerKey].transform = e.target.value;
+        renderCanvas();
+      });
+
+      // Position Sliders
+      posXSlider.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        appState.layers[appState.activeLayerKey].posX = val;
+        posXVal.textContent = `${val}%`;
+        renderCanvas();
+      });
+
+      posYSlider.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        appState.layers[appState.activeLayerKey].posY = val;
+        posYVal.textContent = `${val}%`;
+        renderCanvas();
+      });
+
+      rotationSlider.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value);
+        appState.layers[appState.activeLayerKey].rotation = val;
+        rotationVal.textContent = `${val}°`;
+        renderCanvas();
+      });
+
+      // Interactive Canvas Click / Drag Positioning
+      canvas.addEventListener('mousedown', (e) => {
+        appState.isDragging = true;
+        updatePositionFromCanvasClick(e);
+      });
+
+      canvas.addEventListener('mousemove', (e) => {
+        if (appState.isDragging) {
+          updatePositionFromCanvasClick(e);
+        }
+      });
+
+      window.addEventListener('mouseup', () => {
+        appState.isDragging = false;
+      });
+
+      // Export Event Listeners
+      downloadSingleBtn.addEventListener('click', downloadSingleCertificate);
+      exportZipBtn.addEventListener('click', exportAllAsZip);
+      exportPdfBtn.addEventListener('click', exportAllAsPdf);
+
+      // Dark Mode Toggle
+      themeToggleBtn.addEventListener('click', toggleTheme);
+    }
+
+    function handleImageFile(file) {
+      if (!file.type.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        appState.templateImg = new Image();
+        appState.templateImg.onload = () => {
+          appState.isTemplateLoaded = true;
+          appState.templateWidth = appState.templateImg.width;
+          appState.templateHeight = appState.templateImg.height;
+          canvas.width = appState.templateWidth;
+          canvas.height = appState.templateHeight;
+          templateInfoText.textContent = `${file.name} (${appState.templateWidth} x ${appState.templateHeight} px)`;
+          renderCanvas();
+        };
+        appState.templateImg.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function handleCsvUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          if (results.data && results.data.length > 0) {
+            const fields = results.meta.fields || Object.keys(results.data[0]);
+            
+            // Populate Dropdowns for CSV column selection
+            csvNameColumnSelect.innerHTML = '';
+            csvSubColumnSelect.innerHTML = '<option value="">-- None --</option>';
+
+            fields.forEach(field => {
+              const opt1 = document.createElement('option');
+              opt1.value = field;
+              opt1.textContent = field;
+              csvNameColumnSelect.appendChild(opt1);
+
+              const opt2 = document.createElement('option');
+              opt2.value = field;
+              opt2.textContent = field;
+              csvSubColumnSelect.appendChild(opt2);
+            });
+
+            csvColumnSelectContainer.classList.remove('d-none');
+
+            // Save Parsed Raw Data & Sync
+            const syncParsedData = () => {
+              const nameCol = csvNameColumnSelect.value;
+              const subCol = csvSubColumnSelect.value;
+
+              appState.participants = results.data.map(row => ({
+                name: row[nameCol] || "Participant",
+                sub: subCol ? row[subCol] || "" : "Course / Track",
+                date: new Date().toISOString().split('T')[0]
+              }));
+
+              appState.currentParticipantIndex = 0;
+              updateParticipantUI();
+              renderCanvas();
+            };
+
+            csvNameColumnSelect.onchange = syncParsedData;
+            csvSubColumnSelect.onchange = syncParsedData;
+
+            syncParsedData();
+          }
+        }
+      });
+    }
+
+    function updatePositionFromCanvasClick(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      const pctX = Math.min(Math.max((clickX / rect.width) * 100, 0), 100);
+      const pctY = Math.min(Math.max((clickY / rect.height) * 100, 0), 100);
+
+      const layer = appState.layers[appState.activeLayerKey];
+      layer.posX = parseFloat(pctX.toFixed(1));
+      layer.posY = parseFloat(pctY.toFixed(1));
+
+      posXSlider.value = layer.posX;
+      posYSlider.value = layer.posY;
+      posXVal.textContent = `${layer.posX}%`;
+      posYVal.textContent = `${layer.posY}%`;
+
+      renderCanvas();
+    }
+
+    function updateUIFromState() {
+      const layer = appState.layers[appState.activeLayerKey];
+
+      layerVisibilityToggle.checked = layer.enabled;
+      layerCustomTextInput.value = layer.customText;
+      fontFamilySelect.value = layer.fontFamily;
+      fontSizeInput.value = layer.fontSize;
+      textColorInput.value = layer.color;
+      btnBoldToggle.checked = layer.bold;
+      btnItalicToggle.checked = layer.italic;
+      
+      document.querySelectorAll('input[name="textAlignRadio"]').forEach(r => {
+        r.checked = (r.value === layer.align);
+      });
+
+      textTransformSelect.value = layer.transform;
+      posXSlider.value = layer.posX;
+      posYSlider.value = layer.posY;
+      rotationSlider.value = layer.rotation;
+
+      posXVal.textContent = `${layer.posX}%`;
+      posYVal.textContent = `${layer.posY}%`;
+      rotationVal.textContent = `${layer.rotation}°`;
+
+      updateParticipantUI();
+    }
+
+    function updateParticipantUI() {
+      totalParticipantsBadge.textContent = appState.participants.length;
+      if (appState.participants.length > 0) {
+        const p = appState.participants[appState.currentParticipantIndex];
+        previewParticipantName.textContent = p.name;
+        previewParticipantIndex.textContent = `Participant ${appState.currentParticipantIndex + 1} of ${appState.participants.length}`;
+      } else {
+        previewParticipantName.textContent = "No Participants";
+        previewParticipantIndex.textContent = "0 of 0";
+      }
+    }
+
+    /* ==========================================================================
+       EXPORT & DOWNLOAD LOGIC
+       ========================================================================== */
+    function downloadSingleCertificate() {
+      renderCanvas();
+      const name = appState.participants[appState.currentParticipantIndex]?.name || 'Certificate';
+      const cleanName = name.replace(/[^a-zA-Z0-9_-]/g, '_');
+      
+      const link = document.createElement('a');
+      link.download = `${cleanName}_Certificate.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    async function exportAllAsZip() {
+      if (appState.participants.length === 0) return;
+
+      showProgressModal("Generating Zip Archive...", "Rendering certificate images");
+      const zip = new JSZip();
+      const activeIdx = appState.currentParticipantIndex;
+
+      for (let i = 0; i < appState.participants.length; i++) {
+        appState.currentParticipantIndex = i;
+        renderCanvas();
+
+        const name = appState.participants[i].name || `Participant_${i+1}`;
+        const cleanName = name.replace(/[^a-zA-Z0-9_-]/g, '_');
+        const dataUrl = canvas.toDataURL('image/png');
+        const base64Data = dataUrl.replace(/^data:image\/png;base64,/, "");
+
+        zip.file(`${i+1}_${cleanName}_Certificate.png`, base64Data, { base64: true });
+
+        updateProgress(i + 1, appState.participants.length);
+        await new Promise(r => setTimeout(r, 20)); // Keep UI responsive
+      }
+
+      // Restore original index
+      appState.currentParticipantIndex = activeIdx;
+      renderCanvas();
+
+      document.getElementById('progressSubtitle').textContent = "Compressing ZIP file...";
+      const content = await zip.generateAsync({ type: "blob" });
+      saveAs(content, "Certificates_Batch.zip");
+      hideProgressModal();
+    }
+
+    async function exportAllAsPdf() {
+      if (appState.participants.length === 0) return;
+
+      showProgressModal("Generating PDF Document...", "Creating multi-page certificate file");
+
+      const { jsPDF } = window.jspdf;
+      const orientation = appState.templateWidth >= appState.templateHeight ? 'landscape' : 'portrait';
+      const pdf = new jsPDF({
+        orientation: orientation,
+        unit: 'px',
+        format: [appState.templateWidth, appState.templateHeight]
+      });
+
+      const activeIdx = appState.currentParticipantIndex;
+
+      for (let i = 0; i < appState.participants.length; i++) {
+        appState.currentParticipantIndex = i;
+        renderCanvas();
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.92);
+        if (i > 0) pdf.addPage([appState.templateWidth, appState.templateHeight], orientation);
+        pdf.addImage(imgData, 'JPEG', 0, 0, appState.templateWidth, appState.templateHeight);
+
+        updateProgress(i + 1, appState.participants.length);
+        await new Promise(r => setTimeout(r, 20));
+      }
+
+      appState.currentParticipantIndex = activeIdx;
+      renderCanvas();
+
+      pdf.save("Certificates_Combined.pdf");
+      hideProgressModal();
+    }
+
+    /* Progress Modal Helpers */
+    function showProgressModal(title, subtitle) {
+      document.getElementById('progressTitle').textContent = title;
+      document.getElementById('progressSubtitle').textContent = subtitle;
+      document.getElementById('progressBar').style.width = '0%';
+      document.getElementById('progressText').textContent = `0 of ${appState.participants.length}`;
+      document.getElementById('progressOverlay').classList.remove('d-none');
+    }
+
+    function updateProgress(current, total) {
+      const pct = Math.round((current / total) * 100);
+      document.getElementById('progressBar').style.width = `${pct}%`;
+      document.getElementById('progressText').textContent = `${current} of ${total} (${pct}%)`;
+    }
+
+    function hideProgressModal() {
+      document.getElementById('progressOverlay').classList.add('d-none');
+    }
+
+    /* Dark/Light Theme Switching */
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-bs-theme', newTheme);
+
+      if (newTheme === 'dark') {
+        themeIcon.className = 'bi bi-sun';
+        themeText.textContent = 'Light Mode';
+      } else {
+        themeIcon.className = 'bi bi-moon-stars';
+        themeText.textContent = 'Dark Mode';
+      }
+    }
+  </script>
+</body>
+</html>
